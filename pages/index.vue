@@ -3,7 +3,7 @@
     <div>
       <Logo />
       <h1 class="title">
-        iclass-client-frontend
+        iclass-client-frontend1
       </h1>
       <div class="links">
         <a

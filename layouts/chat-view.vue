@@ -8,9 +8,15 @@
         :default-selected-keys="['1']"
         :style="{ lineHeight: '64px' }"
       >
-        <a-menu-item key="1"> nav 1 </a-menu-item>
-        <a-menu-item key="2"> nav 2 </a-menu-item>
-        <a-menu-item key="3"> nav 3 </a-menu-item>
+        <a-menu-item key="1">
+          nav 1
+        </a-menu-item>
+        <a-menu-item key="2">
+          nav 2
+        </a-menu-item>
+        <a-menu-item key="3">
+          nav 3
+        </a-menu-item>
       </a-menu>
     </a-layout-header>
     <a-layout-content :style="{ padding: '0 50px', marginTop: '64px' }">
@@ -19,18 +25,18 @@
         <a-breadcrumb-item>List</a-breadcrumb-item>
         <a-breadcrumb-item>App</a-breadcrumb-item>
       </a-breadcrumb>
-      <div :style="{ background: '#fff', padding: '24px', minHeight: '80vh' }">
+      <div :style="{ background: '#fff', padding: '24px', minHeight: '60vh' }">
         <Nuxt />
       </div>
     </a-layout-content>
     <a-layout-footer :style="{ textAlign: 'center' }">
-      Ant Design ©2018 Created by Ant UED
+      iClass.buzz ©2020
     </a-layout-footer>
   </a-layout>
 </template>
 <style>
 #chat-view {
-  height: 100vh;
+  height: auto;
 }
 #chat-view .logo {
   width: 120px;
@@ -57,6 +63,10 @@ html {
   -webkit-font-smoothing: antialiased;
   box-sizing: border-box;
   height: 100vh;
+}
+
+body {
+  background-color: #f0f2f5;
 }
 
 *,
