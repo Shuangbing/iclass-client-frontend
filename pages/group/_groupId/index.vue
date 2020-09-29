@@ -3,7 +3,7 @@
     <a-row>
       <a-col :span="16">
         <div>
-          <a-tabs default-active-key="1" @change="callback">
+          <a-tabs default-active-key="1">
             <a-tab-pane key="1" tab="ビデオ通話"> ビデオ通話 </a-tab-pane>
             <a-tab-pane key="2" tab="画面共有" force-render>
               画面共有
@@ -33,17 +33,14 @@
             </template>
           </a-list>
           <div class="chat-send">
-            <a-mentions
-              v-model="value"
-              @change="onChange"
-              @select="onSelect"
-              rows="5"
-              @keyup.enter="handleSubmit"
-            >
-              <a-mentions-option value="afc163"> afc163 </a-mentions-option>
-              <a-mentions-option value="zombieJ"> zombieJ </a-mentions-option>
-              <a-mentions-option value="yesmeck"> yesmeck </a-mentions-option>
-            </a-mentions>
+            <a-spin :spinning="submitting">
+              <a-textarea
+                v-model="value"
+                placeholder="Enterキーで送信する"
+                rows="5"
+                @keydown.enter.exact="handleSubmit"
+              />
+            </a-spin>
             <a-form-item>
               <a-button
                 html-type="submit"
@@ -62,6 +59,8 @@
 </template>
 <script>
 import moment from "moment";
+import io from "socket.io-client";
+
 export default {
   layout: "chat-view",
   data() {
@@ -70,10 +69,22 @@ export default {
       submitting: false,
       value: "",
       moment,
+      socket: "",
+      groupId: null,
     };
   },
   mounted() {
+    this.groupId = this.$nuxt.$route.params.groupId;
+
+    this.socket = io("http://localhost:3000");
+    this.socket.on("connect", () => {
+      if (this.groupId) {
+        this.socket.emit("jion", { groupId: this.$nuxt.$route.params.groupId });
+      }
+    });
+
     moment.locale("ja");
+    this.comments = JSON.parse(sessionStorage.chatHistory ?? "[]");
   },
   methods: {
     handleSubmit() {
@@ -82,20 +93,19 @@ export default {
       }
 
       this.submitting = true;
-
+      const message = {
+        author: "Test User",
+        avatar: "https://image.flaticon.com/icons/png/512/847/847969.png",
+        content: this.value,
+        datetime: moment().fromNow(),
+      };
       setTimeout(() => {
         this.submitting = false;
-        this.comments = [
-          {
-            author: "Test User",
-            avatar: "https://image.flaticon.com/icons/png/512/847/847969.png",
-            content: this.value,
-            datetime: moment().fromNow(),
-          },
-          ...this.comments,
-        ];
+        this.socket.emit("send:message", message);
+        this.comments = [message, ...this.comments];
+        sessionStorage.chatHistory = JSON.stringify(this.comments);
         this.value = "";
-      }, 500);
+      }, 100);
     },
   },
 };
@@ -111,8 +121,9 @@ export default {
 #chat .chat-history {
   height: 50vh;
   min-height: 50vh;
-  overflow-x: hidden;
+
   overflow-y: scroll;
+  overflow-wrap: break-word;
 }
 #chat .chat-send {
   margin-top: 1rem;
