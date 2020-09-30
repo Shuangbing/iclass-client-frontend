@@ -14,6 +14,7 @@
       </a-col>
       <a-col :span="8">
         <div id="chat">
+          <a-spin :spinning="connecting">
           <a-list
             class="chat-history"
             :bordered="true"
@@ -27,7 +28,7 @@
                   :author="item.author"
                   :avatar="item.avatar"
                   :content="item.content"
-                  :datetime="item.datetime"
+                  :datetime="moment(item.datetime).fromNow()"
                 />
               </a-list-item>
             </template>
@@ -52,6 +53,7 @@
               </a-button>
             </a-form-item>
           </div>
+          </a-spin>
         </div>
       </a-col>
     </a-row>
@@ -67,6 +69,7 @@ export default {
     return {
       comments: [],
       submitting: false,
+      connecting: true,
       value: "",
       moment,
       socket: "",
@@ -75,12 +78,29 @@ export default {
   },
   mounted() {
     this.groupId = this.$nuxt.$route.params.groupId;
-
     this.socket = io("http://localhost:3000");
+
     this.socket.on("connect", () => {
       if (this.groupId) {
-        this.socket.emit("jion", { groupId: this.$nuxt.$route.params.groupId });
+        this.socket.emit(
+          "jion",
+          { groupId: this.$nuxt.$route.params.groupId },
+          (data) => {
+            const { status, message, groupData } = data;
+            if (status) {
+              this.$message.success(`${groupData.subject.title}[${groupData.title}]に参加しました`);
+              this.connecting = false;
+            } else {
+              this.$message.error(message);
+            }
+          }
+        );
       }
+    });
+
+    this.socket.on("recive:message", (data) => {
+      this.comments = [data, ...this.comments];
+      sessionStorage.chatHistory = JSON.stringify(this.comments);
     });
 
     moment.locale("ja");
@@ -93,18 +113,23 @@ export default {
       }
 
       this.submitting = true;
-      const message = {
+      const sendMessage = {
         author: "Test User",
         avatar: "https://image.flaticon.com/icons/png/512/847/847969.png",
         content: this.value,
-        datetime: moment().fromNow(),
+        datetime: new Date(),
+        groupId: this.groupId,
       };
       setTimeout(() => {
         this.submitting = false;
-        this.socket.emit("send:message", message);
-        this.comments = [message, ...this.comments];
-        sessionStorage.chatHistory = JSON.stringify(this.comments);
-        this.value = "";
+        this.socket.emit("send:message", sendMessage, (data) => {
+          const { status, message } = data;
+          if (status) {
+            this.value = "";
+          } else {
+            this.$message.info(message);
+          }
+        });
       }, 100);
     },
   },
