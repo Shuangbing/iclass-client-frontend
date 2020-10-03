@@ -37,7 +37,7 @@ export default {
   },
   data() {
     return {
-      socket: io("http://localhost:3000"),
+      socket: io("https://dev--api.iclass.buzz"),
       groupId: this.$nuxt.$route.params.groupId,
     };
   },

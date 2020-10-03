@@ -9,10 +9,10 @@
         autoplay
         object-fit="contain"
       ></video>
-      <a-button type="primary" @click="stopShare"> 画面共有停止 </a-button>
+      <a-button type="danger" @click="stopShare" icon="pause-circle"> 画面共有停止 </a-button>
     </div>
     <div v-show="!isShareing">
-      <a-button type="primary" @click="startShare"> 画面共有開始 </a-button>
+      <a-button type="primary" @click="startShare" icon="desktop"> 画面共有開始 </a-button>
     </div>
   </div>
 </template>
