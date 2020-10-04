@@ -1,8 +1,10 @@
 export default {
   // Disable server-side rendering (https://go.nuxtjs.dev/ssr-mode)
   ssr: false,
-
   // Global page headers (https://go.nuxtjs.dev/config-head)
+  env: {
+    baseUrl: process.env.API_URL || 'http://localhost:3000'
+  },
   head: {
     title: 'iClass.buzz',
     meta: [
@@ -48,7 +50,7 @@ export default {
   },
   proxy: {
     '/api': {
-      target: process.env.BASE_URL || 'http://localhost:3000',
+      target: process.env.API_URL || 'http://localhost:3000',
       pathRewrite: {
         '^/api': '/'
       }
