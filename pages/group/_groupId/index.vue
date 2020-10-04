@@ -41,13 +41,13 @@ export default {
   },
   data() {
     return {
-      socket: io(process.env.baseUrl),
+      socket: io(process.env.API_URL || "http://localhost:3000"),
       groupId: this.$nuxt.$route.params.groupId,
       groupData: {},
     };
   },
   async asyncData({ params, $axios }) {
-    const { data } = await $axios.get(`/api/client/group/${params.groupId}`);
+    const { data } = await $axios.get(`/client/group/${params.groupId}`);
     console.log(data);
     return { groupData: data };
   },

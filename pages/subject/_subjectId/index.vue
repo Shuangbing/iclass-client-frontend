@@ -91,9 +91,7 @@ export default {
     }
   },
   async asyncData({ params, $axios }) {
-    const { data } = await $axios.get(
-      `/api/client/subject/${params.subjectId}`
-    );
+    const { data } = await $axios.get(`/client/subject/${params.subjectId}`);
     return { subjectData: data };
   },
   methods: {
@@ -104,7 +102,7 @@ export default {
         name: this.form.name,
       };
       await this.$nuxt.$axios
-        .post("/api/client/subject/jion", jionSubjectData)
+        .post("/client/subject/jion", jionSubjectData)
         .then((result) => {
           this.step = 1;
           this.waitting = true;

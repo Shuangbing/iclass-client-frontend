@@ -2,9 +2,6 @@ export default {
   // Disable server-side rendering (https://go.nuxtjs.dev/ssr-mode)
   ssr: false,
   // Global page headers (https://go.nuxtjs.dev/config-head)
-  env: {
-    baseUrl: process.env.API_URL || 'http://localhost:3000'
-  },
   head: {
     title: 'iClass.buzz',
     meta: [
@@ -39,22 +36,12 @@ export default {
   modules: [
     // https://go.nuxtjs.dev/axios
     '@nuxtjs/axios',
-    'cookie-universal-nuxt',
-    '@nuxtjs/proxy'
+    'cookie-universal-nuxt'
   ],
 
   // Axios module configuration (https://go.nuxtjs.dev/config-axios)
   axios: {
-    proxy: true,
-    credentials: true
-  },
-  proxy: {
-    '/api': {
-      target: process.env.API_URL || 'http://localhost:3000',
-      pathRewrite: {
-        '^/api': '/'
-      }
-    }
+    baseURL: process.env.API_URL || 'http://localhost:3000',
   },
   // Build Configuration (https://go.nuxtjs.dev/config-build)
   build: {
