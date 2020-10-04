@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "nuxt --port 8010",
-    "build": "nuxt build",
+    "build": "API_URL=/ nuxt build",
     "start": "nuxt start",
     "generate": "nuxt generate"
   },
