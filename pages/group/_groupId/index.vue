@@ -41,7 +41,7 @@ export default {
   },
   data() {
     return {
-      socket: io(process.env.API_URL || "http://localhost:3000", {
+      socket: io(process.env.baseUrl, {
         query: { token: this.$cookies.get("clientAccessToken") },
       }),
       groupId: this.$nuxt.$route.params.groupId,
