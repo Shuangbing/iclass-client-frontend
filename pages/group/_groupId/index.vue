@@ -3,9 +3,13 @@
     <a-row>
       <a-col :span="16">
         <div>
+          <a-page-header
+            :title="groupData.group.subject.title"
+            :sub-title="groupData.group.title"
+          />
           <a-tabs default-active-key="1">
             <a-tab-pane key="1" tab="ビデオ通話">
-              <VideoChat />
+              <VideoChat :groupData="groupData" />
             </a-tab-pane>
             <a-tab-pane key="2" tab="画面共有" force-render>
               <ScreenShare />
@@ -37,9 +41,15 @@ export default {
   },
   data() {
     return {
-      socket: io("https://dev--api.iclass.buzz"),
+      socket: io(process.env.BASE_URL || "http://localhost:3000"),
       groupId: this.$nuxt.$route.params.groupId,
+      groupData: {},
     };
+  },
+  async asyncData({ params, $axios }) {
+    const { data } = await $axios.get(`/api/client/group/${params.groupId}`);
+    console.log(data);
+    return { groupData: data };
   },
 };
 </script>

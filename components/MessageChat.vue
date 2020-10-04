@@ -12,10 +12,16 @@
           <a-list-item>
             <a-comment
               :author="item.author"
-              :avatar="item.avatar"
               :content="item.content"
               :datetime="moment(item.datetime).fromNow()"
-            />
+              ><a-avatar
+                slot="avatar"
+                :style="
+                  `backgroundColor:` + hashColorFromName(item.author || 'none')
+                "
+                icon="user"
+              />
+            </a-comment>
           </a-list-item>
         </template>
       </a-list>
@@ -90,17 +96,27 @@ export default {
     this.comments = JSON.parse(sessionStorage.chatHistory ?? "[]");
   },
   methods: {
+    hashColorFromName(name) {
+      var hash = 0;
+      if (name.length === 0) return hash;
+      for (var i = 0; i < name.length; i++) {
+        hash = name.charCodeAt(i) + ((hash << 5) - hash);
+        hash = hash & hash;
+      }
+      var color = "#";
+      for (var i = 0; i < 3; i++) {
+        var value = (hash >> (i * 8)) & 255;
+        color += ("00" + value.toString(16)).substr(-2);
+      }
+      return color;
+    },
     handleSubmit() {
       if (!this.value) {
         return;
       }
-
       this.submitting = true;
       const sendMessage = {
-        author: "Test User",
-        avatar: "https://image.flaticon.com/icons/png/512/847/847969.png",
         content: this.value,
-        datetime: new Date(),
         groupId: this.groupId,
       };
       setTimeout(() => {

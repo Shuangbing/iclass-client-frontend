@@ -10,7 +10,9 @@
   },
   "dependencies": {
     "@nuxtjs/axios": "^5.12.2",
+    "@nuxtjs/proxy": "^2.0.1",
     "ant-design-vue": "^1.6.5",
+    "cookie-universal-nuxt": "^2.1.4",
     "core-js": "^3.6.5",
     "nuxt": "^2.14.5",
     "socket.io-client": "^2.3.0"

@@ -37,13 +37,23 @@ export default {
   modules: [
     // https://go.nuxtjs.dev/axios
     '@nuxtjs/axios',
+    'cookie-universal-nuxt',
+    '@nuxtjs/proxy'
   ],
 
   // Axios module configuration (https://go.nuxtjs.dev/config-axios)
   axios: {
-    baseURL: 'https://dev--api.iclass.buzz',
+    proxy: true,
+    credentials: true
   },
-
+  proxy: {
+    '/api': {
+      target: process.env.BASE_URL || 'http://localhost:3000',
+      pathRewrite: {
+        '^/api': '/'
+      }
+    }
+  },
   // Build Configuration (https://go.nuxtjs.dev/config-build)
   build: {
     vendor: [

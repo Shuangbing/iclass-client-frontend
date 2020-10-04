@@ -92,7 +92,7 @@ export default {
   },
   async asyncData({ params, $axios }) {
     const { data } = await $axios.get(
-      `/client/subject/${params.subjectId}`
+      `/api/client/subject/${params.subjectId}`
     );
     return { subjectData: data };
   },
@@ -104,15 +104,17 @@ export default {
         name: this.form.name,
       };
       await this.$nuxt.$axios
-        .post("/client/subject/jion", jionSubjectData)
-        .then((data) => {
+        .post("/api/client/subject/jion", jionSubjectData)
+        .then((result) => {
           this.step = 1;
           this.waitting = true;
           this.waittingMember.push({ name: this.form.name, isSelf: true });
           setTimeout(() => {
+            console.log(result);
             this.waitting = false;
-            this.$nuxt.$router.push(`/group/${data.data.data.groupId}`);
-          }, 7000);
+            this.$cookies.set("clientAccessToken", result.data.access_token);
+            this.$nuxt.$router.push(`/group/${result.data.groupId}`);
+          }, 100);
         })
         .catch((error) => {
           this.password = "";
