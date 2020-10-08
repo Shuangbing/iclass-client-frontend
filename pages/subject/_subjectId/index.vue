@@ -108,7 +108,6 @@ export default {
           this.waitting = true;
           this.waittingMember.push({ name: this.form.name, isSelf: true });
           setTimeout(() => {
-            console.log(result);
             this.waitting = false;
             this.$cookies.set("clientAccessToken", result.data.access_token);
             this.$nuxt.$router.push(`/group/${result.data.groupId}`);

@@ -1,24 +1,35 @@
 <template>
   <div>
-    <a-table :columns="columns" :data-source="data" rowKey="filename" >
-      <a slot="filename" slot-scope="text">{{ text }}</a>
+    <a-table :columns="columns" :data-source="data" rowKey="id">
+      <a target="_blank" slot="filename" slot-scope="file" :href="file.location"
+        >{{ file.filename }}
+      </a>
+      <span slot="expiredAt" slot-scope="date">{{
+        moment(date).fromNow()
+      }}</span>
+      <span slot="size" slot-scope="size">{{ bytesToSize(size) }}</span>
     </a-table>
     <a-upload
       name="file"
-      :multiple="true"
-      action="https://www.mocky.io/v2/5cc8019d300000980a055e76"
+      :multiple="false"
+      :headers="{
+        Authorization: `Bearer ${$cookies.get('clientAccessToken')}`,
+      }"
+      :action="`${$axios.defaults.baseURL}/client/group/${groupId}/upload`"
       @change="uploadFile"
     >
-      <a-button> <a-icon type="upload" /> ファイルを選択してアップロード </a-button>
+      <a-button>
+        <a-icon type="upload" /> ファイルを選択してアップロード
+      </a-button>
     </a-upload>
   </div>
 </template>
 <script>
+import moment from "moment";
+
 const columns = [
   {
     title: "ファイル名",
-    dataIndex: "filename",
-    key: "filename",
     width: 200,
     scopedSlots: { customRender: "filename" },
   },
@@ -27,36 +38,37 @@ const columns = [
     dataIndex: "size",
     key: "size",
     width: 100,
+    scopedSlots: { customRender: "size" },
   },
   {
     title: "所有者",
-    dataIndex: "owner",
-    key: "owner",
+    dataIndex: "memberName",
+    key: "memberName",
     ellipsis: true,
   },
   {
     title: "有効期限",
-    dataIndex: "expried",
-    key: "expried",
+    dataIndex: "expiredAt",
+    key: "expiredAt",
     ellipsis: true,
-  },
-];
-
-const data = [
-  {
-    filename: "Document 1.pdf",
-    size: "1.2MB",
-    owner: "Shuangbing He",
-    expried: "72時間後",
+    scopedSlots: { customRender: "expiredAt" },
   },
 ];
 
 export default {
+  props: {
+    groupId: String,
+    groupData: Object,
+  },
   data() {
     return {
-      data,
+      data: [],
       columns,
+      moment,
     };
+  },
+  mounted() {
+    this.data = this.groupData.group.files;
   },
   methods: {
     bytesToSize(bytes) {
@@ -66,19 +78,11 @@ export default {
       return Math.round(bytes / Math.pow(1024, i), 2) + " " + sizes[i];
     },
     uploadFile(info) {
-      if (info.file.status !== "uploading") {
-        console.log(info.file, info.fileList);
-      }
       if (info.file.status === "done") {
-        this.$message.success(`${info.file.name} file uploaded successfully`);
-        this.data.push({
-          filename: info.file.name,
-          size: this.bytesToSize(info.file.size),
-          owner: "Shuangbing He",
-          expried: "72時間後",
-        });
+        this.$message.success(`${info.file.name} アップロードしました`);
+        this.data.push(info.file.response);
       } else if (info.file.status === "error") {
-        this.$message.error(`${info.file.name} file upload failed.`);
+        this.$message.error(`${info.file.name} できませんでした`);
       }
     },
   },

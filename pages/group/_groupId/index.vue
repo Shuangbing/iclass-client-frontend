@@ -14,7 +14,7 @@
             <a-tab-pane key="2" tab="画面共有" force-render>
               <ScreenShare />
             </a-tab-pane>
-            <a-tab-pane key="3" tab="ファイル共有"> <UploadFile /> </a-tab-pane>
+            <a-tab-pane key="3" tab="ファイル共有"> <UploadFile :groupId="groupId" :groupData="groupData" /> </a-tab-pane>
           </a-tabs>
         </div>
       </a-col>
@@ -50,7 +50,6 @@ export default {
   },
   async asyncData({ params, $axios }) {
     const { data } = await $axios.get(`/client/group/${params.groupId}`);
-    console.log(data);
     return { groupData: data };
   },
 };
