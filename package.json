@@ -6,6 +6,7 @@
     "dev": "nuxt --port 8010",
     "build": "nuxt build",
     "start": "nuxt start",
+    "deploy:dev": "API_URL=https://dev--api.iclass.buzz nuxt build && firebase deploy",
     "generate": "nuxt generate"
   },
   "dependencies": {
@@ -15,6 +16,7 @@
     "cookie-universal-nuxt": "^2.1.4",
     "core-js": "^3.6.5",
     "nuxt": "^2.14.5",
+    "skyway-js": "^3.1.0",
     "socket.io-client": "^2.3.0"
   },
   "devDependencies": {}
