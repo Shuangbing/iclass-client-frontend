@@ -47,6 +47,7 @@
               width="100%"
               height="100%"
               autoplay
+              muted
               object-fit="contain"
               :srcObject.prop="remoteStream"
             ></video>
@@ -104,7 +105,7 @@ export default {
     }
 
     this.peer = await new Peer(this.groupData.user.userId, {
-      key: process.env.SKYWAY_API_KEY,
+      key: process.env.SKYWAY_API_KEY || "5bee86ef-e251-42f7-a337-cd4c3e6eb6c7",
     });
     this.peer.on("open", this.connect);
   },
