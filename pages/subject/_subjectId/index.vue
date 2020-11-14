@@ -37,6 +37,16 @@
           </div>
           <div v-if="step == 1">
             <a-list item-layout="horizontal" :data-source="waittingMember">
+              <a-list-item>
+                <a-list-item-meta description="グルーピング待ち中">
+                  <a-avatar
+                    slot="avatar"
+                    style="backgroundcolor: #87d068"
+                    icon="user"
+                  />
+                  <a slot="title">{{ this.form.name }}</a>
+                </a-list-item-meta>
+              </a-list-item>
               <a-list-item slot="renderItem" slot-scope="item">
                 <a-list-item-meta description="グルーピング待ち中">
                   <a-avatar
@@ -72,15 +82,11 @@ export default {
         password: "",
       },
       waitting: false,
+      memberId: null,
       subjectId: null,
       hasPasswordquery: false,
       step: 0,
-      waittingMember: [
-        {
-          name: "都市大太郎",
-          isSelf: false,
-        },
-      ],
+      waittingMember: [],
     };
   },
   mounted() {
@@ -106,15 +112,23 @@ export default {
         .then((result) => {
           this.step = 1;
           this.waitting = true;
-          this.waittingMember.push({ name: this.form.name, isSelf: true });
-          setTimeout(() => {
-            this.waitting = false;
-            this.$cookies.set("clientAccessToken", result.data.access_token);
-            this.$nuxt.$router.push(`/group/${result.data.groupId}`);
-          }, 100);
+          this.$cookies.set("clientAccessToken", result.data.access_token);
+          this.memberId = result.data.memberId;
+          setInterval(async () => {
+            await this.refreshWaittingMember();
+          }, 5000);
         })
         .catch((error) => {
           this.password = "";
+        });
+    },
+    async refreshWaittingMember() {
+      const members = await this.$nuxt.$axios
+        .get("/client/subject/waitting")
+        .then((result) => {
+          this.waittingMember = result.data.filter(
+            (member) => member.memberCode != this.memberId
+          );
         });
     },
   },
