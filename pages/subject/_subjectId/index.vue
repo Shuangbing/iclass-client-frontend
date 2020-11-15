@@ -97,6 +97,9 @@ export default {
       this.form.password = this.$nuxt.$route.query.p;
     }
   },
+  beforeDestroy() {
+    clearInterval(this.waittingInterval);
+  },
   async asyncData({ params, $axios }) {
     const { data } = await $axios.get(`/client/subject/${params.subjectId}`);
     return { subjectData: data };
