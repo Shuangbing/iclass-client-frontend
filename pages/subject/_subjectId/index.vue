@@ -87,6 +87,7 @@ export default {
       hasPasswordquery: false,
       step: 0,
       waittingMember: [],
+      waittingInterval: null,
     };
   },
   mounted() {
@@ -113,8 +114,9 @@ export default {
           this.step = 1;
           this.waitting = true;
           this.$cookies.set("clientAccessToken", result.data.access_token);
+          this.$cookies.set("groupId", null);
           this.memberId = result.data.memberId;
-          setInterval(async () => {
+          this.waittingInterval = setInterval(async () => {
             await this.refreshWaittingMember();
           }, 5000);
         })
@@ -125,11 +127,24 @@ export default {
     async refreshWaittingMember() {
       const members = await this.$nuxt.$axios
         .get("/client/subject/waitting")
-        .then((result) => {
-          this.waittingMember = result.data.filter(
+        .then(async (result) => {
+          this.waittingMember = result.data.members.filter(
             (member) => member.memberCode != this.memberId
           );
+          if (result.data.self.group) {
+            clearInterval(this.waittingInterval);
+            await this.fetchNewGroupToken();
+          }
         });
+    },
+    async fetchNewGroupToken() {
+      await this.$nuxt.$axios.post("/client/group/token").then((result) => {
+        this.step = 3;
+        this.waitting = false;
+        this.$cookies.set("clientAccessToken", result.data.access_token);
+        this.$cookies.set("clientGroupCode", result.data.groupCode);
+        this.$nuxt.$router.push("/group");
+      });
     },
   },
 };

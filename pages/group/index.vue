@@ -14,7 +14,9 @@
             <a-tab-pane key="2" tab="画面共有" force-render>
               <ScreenShare />
             </a-tab-pane>
-            <a-tab-pane key="3" tab="ファイル共有"> <UploadFile :groupId="groupId" :groupData="groupData" /> </a-tab-pane>
+            <a-tab-pane key="3" tab="ファイル共有">
+              <UploadFile :groupId="groupId" :groupData="groupData" />
+            </a-tab-pane>
           </a-tabs>
         </div>
       </a-col>
@@ -44,12 +46,12 @@ export default {
       socket: io(process.env.baseUrl, {
         query: { token: this.$cookies.get("clientAccessToken") },
       }),
-      groupId: this.$nuxt.$route.params.groupId,
+      groupId: this.$cookies.get("clientGroupCode"),
       groupData: {},
     };
   },
   async asyncData({ params, $axios }) {
-    const { data } = await $axios.get(`/client/group/${params.groupId}`);
+    const { data } = await $axios.get(`/client/group`);
     return { groupData: data };
   },
 };
