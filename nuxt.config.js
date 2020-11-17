@@ -39,9 +39,8 @@ export default {
   modules: [
     // https://go.nuxtjs.dev/axios
     '@nuxtjs/axios',
-    'cookie-universal-nuxt'
+    'cookie-universal-nuxt',
   ],
-
   // Axios module configuration (https://go.nuxtjs.dev/config-axios)
   axios: {
     baseURL: process.env.API_URL || 'http://localhost:3000',
@@ -51,5 +50,14 @@ export default {
     vendor: [
       'socket.io-client'
     ]
+  },
+  router: {
+    extendRoutes(routes, resolve) {
+      routes.push({
+        name: 'notFound',
+        path: '*',
+        component: resolve(__dirname, 'pages/404.vue')
+      })
+    }
   }
 }

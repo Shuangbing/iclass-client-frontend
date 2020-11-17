@@ -82,19 +82,39 @@ export default {
         password: "",
       },
       waitting: false,
-      memberId: null,
       subjectId: null,
       hasPasswordquery: false,
       step: 0,
       waittingMember: [],
       waittingInterval: null,
+      oldCookie: {
+        clientAccessToken: null,
+        clientGroupCode: null,
+      },
     };
   },
   mounted() {
+    this.oldCookie.clientAccessToken = this.$cookies.get("clientAccessToken");
+    this.oldCookie.clientGroupCode = this.$cookies.get("clientGroupCode");
     this.subjectId = this.$nuxt.$route.params.subjectId;
     if (this.$nuxt.$route.query.p) {
       this.hasPasswordquery = true;
       this.form.password = this.$nuxt.$route.query.p;
+    }
+    if (
+      this.oldCookie.clientAccessToken &&
+      this.subjectId ==
+        this.getTokenPayload(this.oldCookie.clientAccessToken).subjectCode
+    ) {
+      this.$confirm({
+        title: "すでに参加しているサブジェクトです。",
+        content: "継続してこのサブジェクトに参加しますか？",
+        okText: "はい",
+        cancelText: "いいえ",
+        onOk: () => {
+          this.startWaitJionGroup();
+        },
+      });
     }
   },
   beforeDestroy() {
@@ -114,25 +134,30 @@ export default {
       await this.$nuxt.$axios
         .post("/client/subject/jion", jionSubjectData)
         .then((result) => {
-          this.step = 1;
-          this.waitting = true;
           this.$cookies.set("clientAccessToken", result.data.access_token);
           this.$cookies.set("groupId", null);
-          this.memberId = result.data.memberId;
-          this.waittingInterval = setInterval(async () => {
-            await this.refreshWaittingMember();
-          }, 5000);
+          this.startWaitJionGroup();
         })
         .catch((error) => {
           this.password = "";
         });
+    },
+    startWaitJionGroup() {
+      this.step = 1;
+      this.waitting = true;
+      this.form.name = this.getTokenPayload(
+        this.oldCookie.clientAccessToken
+      ).name;
+      this.waittingInterval = setInterval(async () => {
+        await this.refreshWaittingMember();
+      }, 5000);
     },
     async refreshWaittingMember() {
       const members = await this.$nuxt.$axios
         .get("/client/subject/waitting")
         .then(async (result) => {
           this.waittingMember = result.data.members.filter(
-            (member) => member.memberCode != this.memberId
+            (member) => member.memberCode != result.data.self.memberCode
           );
           if (result.data.self.group) {
             clearInterval(this.waittingInterval);
@@ -148,6 +173,11 @@ export default {
         this.$cookies.set("clientGroupCode", result.data.groupCode);
         this.$nuxt.$router.push("/group");
       });
+    },
+    getTokenPayload(token) {
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      return JSON.parse(decodeURIComponent(escape(window.atob(base64))));
     },
   },
 };

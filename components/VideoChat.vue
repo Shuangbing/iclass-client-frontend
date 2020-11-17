@@ -1,6 +1,6 @@
 <template>
   <div>
-    <a-row :gutter="[16, 8]">
+    <a-row :gutter="[16, 8]" style="min-width: 750px">
       <a-col :span="8">
         <div class="video-chat-view">
           <a-card hoverable>
@@ -9,7 +9,8 @@
               slot="cover"
               ref="video"
               id="video"
-              width="250px"
+              width="100%"
+              height="200px"
               autoplay
               muted
               object-fit="contain"
@@ -20,7 +21,11 @@
               src="@/assets/video-view-user.png"
               alt="self-video-view-user"
             />
-            <a-card-meta :title="groupData.user.name">
+            <a-card-meta>
+              <div slot="title">
+                <a-icon type="user" />
+                {{ groupData.user.name }}
+              </div>
               <div slot="description">
                 <a-button
                   :type="cameraOn ? 'primary' : 'danger'"
@@ -29,9 +34,9 @@
                   @click="cameraOnOrOff"
                 />
                 <a-button
-                  type="primary"
+                  :type="micphoneMute ? 'primary' : 'danger'"
                   shape="circle"
-                  icon="sound"
+                  icon="audio"
                   @click="micphoneOnOrOff"
                 />
               </div>
@@ -53,12 +58,12 @@
               slot="cover"
               :ref="`video-remote-${member.memberCode}`"
               width="100%"
-              height="100%"
+              height="200px"
               autoplay
-              muted
               object-fit="contain"
               :srcObject.prop="remoteStreams[member.memberCode]"
               poster="data:image/gif,AAAA"
+              :muted="remoteStreamsMute[member.memberCode]"
             ></video>
             <img
               v-if="!remoteStreams[member.memberCode]"
@@ -66,7 +71,16 @@
               src="@/assets/video-view-user.png"
               :alt="member.memberCode"
             />
-            <a-card-meta :title="member.name">
+            <a-card-meta>
+              <div slot="title">
+                <a-icon type="team" />
+                {{ member.name }}
+                <a-icon
+                  v-show="!remoteStreams[member.memberCode]"
+                  type="disconnect"
+                  style="color: red"
+                />
+              </div>
               <div slot="description">
                 <a-button
                   :type="
@@ -96,11 +110,10 @@ export default {
     return {
       peer: "GroupChat",
       cameraOn: false,
-      micphoneOn: true,
+      micphoneMute: true,
       video: {},
       videoStream: {},
       room: null,
-      localStream: undefined,
       remoteStreams: {},
       remoteStreamsMute: {},
       members: {},
@@ -109,6 +122,9 @@ export default {
   async mounted() {
     this.members = this.groupData.group.members.filter(
       (member) => member.memberCode != this.groupData.user.userId
+    );
+    this.members.map((member) =>
+      this.$set(this.remoteStreamsMute, member.memberCode, true)
     );
     this.startSelfVideoChat();
   },
@@ -148,6 +164,8 @@ export default {
       if (this.room) {
         this.room.on("stream", (stream) => {
           this.$set(this.remoteStreams, stream.peerId, stream);
+          this.$set(this.remoteStreamsMute, stream.peerId, false);
+          this.jionedVideoChatNotify(stream.peerId);
         });
 
         this.room.on("peerLeave", (peerId) => {
@@ -161,41 +179,71 @@ export default {
     },
     async cameraOnOrOff() {
       if (this.cameraOn) {
+        this.videoStream.getVideoTracks()[0].enabled = false;
         this.cameraOn = false;
       } else {
+        this.videoStream.getVideoTracks()[0].enabled = true;
         this.cameraOn = true;
-        await this.startSelfVideoChat();
       }
+      this.statusNotify("camera", this.cameraOn);
     },
     micphoneOnOrOff() {
-      this.$set(members, "video", "123123");
-
-      this.members.map((member) => {
-        this.$set(members, "video", "123123");
+      if (this.micphoneMute) {
+        this.videoStream.getAudioTracks()[0].enabled = true;
+        this.micphoneMute = false;
+      } else {
+        this.videoStream.getAudioTracks()[0].enabled = false;
+        this.micphoneMute = true;
+      }
+      this.statusNotify("micphone", !this.micphoneMute);
+    },
+    micphoneRemote(memberCode) {
+      this.remoteStreamsMute[memberCode] == true
+        ? this.$set(this.remoteStreamsMute, memberCode, false)
+        : this.$set(this.remoteStreamsMute, memberCode, true);
+    },
+    statusNotify(device, status) {
+      this.$notification.open({
+        key: "deviceStatus",
+        message: `デバイスの状態が変更されました`,
+        description: `${device == "camera" ? "カメラ" : "マイクのミュート"}を${
+          status ? "オン" : "オフ"
+        }にしました`,
+        placement: "topLeft",
       });
     },
-    micphoneRemote(peerId) {
-      const remoteVideoMute = this.$refs[`video-remote-${peerId}`][0];
-      if (remoteVideoMute.muted) {
-        remoteVideoMute.muted = false;
-      } else {
-        remoteVideoMute.muted = true;
-      }
+    jionedVideoChatNotify(memberCode) {
+      const memberName = this.members.find(
+        (member) => member.memberCode == memberCode
+      ).name;
+      this.$notification.open({
+        message: "通知",
+        description: `メンバー[ ${memberName} ]がビデオチャットに参加しましたがビデオチャットに参加しました`,
+        placement: "topRight",
+      });
     },
   },
 };
 </script>
 
 <style>
+.video-chat-view .ant-card {
+  height: 300px;
+  width: 250px;
+}
 .video-chat-view {
   min-height: 20vh;
   padding: 0;
 }
 .video-chat-view video {
-  object-fit: cover;
   transform: rotateY(180deg);
   -webkit-transform: rotateY(180deg);
   -moz-transform: rotateY(180deg);
+}
+.video-chat-view img {
+  object-fit: contain;
+  width: 100%;
+  height: 200px;
 }
 .video-chat-view video.loading {
   background: black url(~assets/video-loading.gif) center center no-repeat;
