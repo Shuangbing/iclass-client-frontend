@@ -111,7 +111,7 @@ export default {
       return color;
     },
     handleSubmit() {
-      if (!this.value) {
+      if (!this.value || !this.value.match(/\S/g)) {
         return;
       }
       this.submitting = true;

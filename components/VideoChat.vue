@@ -1,6 +1,6 @@
 <template>
   <div>
-    <a-row :gutter="[16, 8]" style="min-width: 750px">
+    <a-row :gutter="[16, 8]" style="min-width: 800px">
       <a-col :span="8">
         <div class="video-chat-view">
           <a-card hoverable>
@@ -189,10 +189,10 @@ export default {
     },
     micphoneOnOrOff() {
       if (this.micphoneMute) {
-        this.videoStream.getAudioTracks()[0].enabled = true;
+        this.videoStream.getAudioTracks()[0].enabled = false;
         this.micphoneMute = false;
       } else {
-        this.videoStream.getAudioTracks()[0].enabled = false;
+        this.videoStream.getAudioTracks()[0].enabled = true;
         this.micphoneMute = true;
       }
       this.statusNotify("micphone", !this.micphoneMute);

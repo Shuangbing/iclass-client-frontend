@@ -72,7 +72,7 @@ export default {
 #chat .chat-history {
   height: 80%;
   min-height: 50vh;
-
+  max-height: 60vh;
   overflow-y: scroll;
   overflow-wrap: break-word;
 }
