@@ -28,12 +28,14 @@
               </div>
               <div slot="description">
                 <a-button
+                  :disabled="!this.enableCamera"
                   :type="cameraOn ? 'primary' : 'danger'"
                   shape="circle"
                   icon="video-camera"
                   @click="cameraOnOrOff"
                 />
                 <a-button
+                  :disabled="!this.enableCamera"
                   :type="micphoneMute ? 'primary' : 'danger'"
                   shape="circle"
                   icon="audio"
@@ -109,6 +111,7 @@ export default {
   data() {
     return {
       peer: "GroupChat",
+      enableCamera: false,
       cameraOn: false,
       micphoneMute: true,
       video: {},
@@ -133,15 +136,19 @@ export default {
   },
   methods: {
     async startSelfVideoChat() {
-      this.cameraOn = true;
       this.video = this.$refs.video;
       if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
         await navigator.mediaDevices
-          .getUserMedia({ video: true, audio: true })
+          .getUserMedia({ video: { width: 415, height: 335 }, audio: true })
           .then(async (stream) => {
+            this.enableCamera = true;
+            this.cameraOn = true;
             this.videoStream = stream;
             this.video.srcObject = this.videoStream;
             await this.video.play();
+          })
+          .catch((error) => {
+            this.$message.error("カメラ/マイクのアクセス権限がありません");
           });
       }
 
@@ -157,7 +164,7 @@ export default {
       }
 
       this.room = this.peer.joinRoom(this.groupData.group.groupCode, {
-        mode: "mesh",
+        mode: "sfu",
         stream: this.videoStream,
       });
 
@@ -170,10 +177,6 @@ export default {
 
         this.room.on("peerLeave", (peerId) => {
           this.$delete(this.remoteStreams, peerId);
-          const audio = document.getElementById(peerId);
-          if (audio) {
-            audio.remove();
-          }
         });
       }
     },

@@ -1,43 +1,12 @@
 <template>
-  <a-layout id="chat-view">
-    <a-layout-header :style="{ position: 'fixed', zIndex: 1, width: '100%' }">
-      <svg
-        class="logo"
-        viewBox="0 0 117 33"
-        version="1.1"
-        xmlns="http://www.w3.org/2000/svg"
-        xmlns:xlink="http://www.w3.org/1999/xlink"
-      >
-        <title>iClass</title>
-        <g
-          id="Page-1"
-          stroke="none"
-          stroke-width="1"
-          fill="none"
-          fill-rule="evenodd"
-          font-family="Verdana"
-          font-size="42"
-          font-weight="normal"
-        >
-          <text id="iClass" fill="#FFFFFF">
-            <tspan x="-3" y="32">iClass</tspan>
-          </text>
-        </g>
-      </svg>
-      <a-menu
-        theme="dark"
-        mode="horizontal"
-        :default-selected-keys="['1']"
-        :style="{ lineHeight: '64px' }"
-      >
-        <a-menu-item key="1"> グループ </a-menu-item>
-      </a-menu>
-    </a-layout-header>
+  <a-layout id="group-view">
+    <Header />
     <a-layout-content :style="{ padding: '0 50px', marginTop: '64px' }">
-      <a-breadcrumb :style="{ margin: '16px 0' }">
-        <a-breadcrumb-item>サブジェクト</a-breadcrumb-item>
-        <a-breadcrumb-item>グループ</a-breadcrumb-item>
-      </a-breadcrumb>
+      <a-alert
+        :style="{ margin: '16px 0' }"
+        message="グループのデータは保存期限が72時間です。期限がすぎるとアクセスできなくなります。"
+        banner
+      />
       <div :style="{ background: '#fff', padding: '24px', minHeight: '60vh' }">
         <Nuxt />
       </div>
@@ -47,15 +16,19 @@
     </a-layout-footer>
   </a-layout>
 </template>
+
+
+<script>
+import Header from "@/components/Header.vue";
+export default {
+  components: {
+    Header,
+  },
+};
+</script>
 <style>
-#chat-view {
+#group-view {
   height: auto;
-}
-#chat-view .logo {
-  width: 100px;
-  height: 31px;
-  margin: 16px 24px 16px 0;
-  float: left;
 }
 html {
   font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI",

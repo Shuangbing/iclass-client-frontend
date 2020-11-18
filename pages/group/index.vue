@@ -52,11 +52,12 @@ export default {
         query: { token: this.$cookies.get("clientAccessToken") },
       }),
       groupId: this.$cookies.get("clientGroupCode"),
-      groupData: {},
     };
   },
-  async asyncData({ params, $axios }) {
-    const { data } = await $axios.get(`/client/group`);
+  async asyncData({ $axios, redirect }) {
+    const { data } = await $axios.get(`/client/group`).catch(() => {
+      return redirect("/404");
+    });
     return { groupData: data };
   },
 };

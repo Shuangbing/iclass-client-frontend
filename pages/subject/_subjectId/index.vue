@@ -1,7 +1,7 @@
 <template>
   <div id="subject-view">
     <a-layout>
-      <a-layout-header><div class="title"></div></a-layout-header>
+      <Header />
       <a-layout-content>
         <a-card class="form">
           <a-steps class="step" size="small" :current="step">
@@ -36,19 +36,41 @@
             </a-form-model>
           </div>
           <div v-if="step == 1">
-            <a-list item-layout="horizontal" :data-source="waittingMember">
-              <a-list-item>
-                <a-list-item-meta description="グルーピング待ち中">
-                  <a-avatar
-                    slot="avatar"
-                    style="backgroundcolor: #87d068"
-                    icon="user"
-                  />
-                  <a slot="title">{{ this.form.name }}</a>
-                </a-list-item-meta>
-              </a-list-item>
-              <a-list-item slot="renderItem" slot-scope="item">
-                <a-list-item-meta description="グルーピング待ち中">
+            <a-progress
+              :percent="percent"
+              status="active"
+              :showInfo="false"
+              :style="{ margin: '1rem 0' }"
+            />
+            <a-list-item>
+              <a-list-item-meta>
+                <a-avatar
+                  slot="avatar"
+                  style="backgroundcolor: #87d068"
+                  icon="user"
+                />
+                <h2 slot="title">{{ this.form.name }}</h2>
+              </a-list-item-meta>
+            </a-list-item>
+            <a-list-item v-if="memberSelf.prepGroupMember">
+              <a-list-item-meta>
+                <a-avatar
+                  slot="avatar"
+                  style="backgroundcolor: #87d068"
+                  icon="user"
+                />
+                <h2 slot="title">{{ memberSelf.prepGroupMember.name }}</h2>
+              </a-list-item-meta>
+            </a-list-item>
+            <a-divider dashed />
+            <a-list
+              item-layout="horizontal"
+              :data-source="waittingMember"
+              :split="false"
+              :locale="locale"
+            >
+              <a-list-item slot-scope="item" slot="renderItem">
+                <a-list-item-meta>
                   <a-avatar
                     slot="avatar"
                     style="backgroundcolor: #87d068"
@@ -57,54 +79,61 @@
                   <a slot="title">{{ item.name }}</a>
                 </a-list-item-meta>
                 <div v-if="!item.isSelf">
-                  <a slot="actions">招待</a>
-                  <a slot="actions">ブロック</a>
+                  <div v-show="!item.prepGroupMember">
+                    <a-button
+                      type="primary"
+                      @click="invitationMember(item.memberCode)"
+                    >
+                      招待
+                    </a-button>
+                  </div>
+                  <div v-show="item.prepGroupMember">
+                    <a-tag color="cyan"> 予備編成 </a-tag>
+                  </div>
                 </div>
               </a-list-item>
             </a-list>
           </div>
-          <div class="waitting" v-if="waitting">
-            <a-spin />
-          </div>
         </a-card>
       </a-layout-content>
-      <a-layout-footer>iClass.buzz</a-layout-footer>
     </a-layout>
   </div>
 </template>
-
 <script>
+import Header from "@/components/Header.vue";
 export default {
+  components: {
+    Header,
+  },
   data() {
     return {
       form: {
         name: "",
         password: "",
       },
+      memberSelf: {},
       waitting: false,
       subjectId: null,
       hasPasswordquery: false,
       step: 0,
       waittingMember: [],
       waittingInterval: null,
-      oldCookie: {
-        clientAccessToken: null,
-        clientGroupCode: null,
+      percent: 0,
+      locale: {
+        emptyText: "他のメンバーがいません",
       },
     };
   },
   mounted() {
-    this.oldCookie.clientAccessToken = this.$cookies.get("clientAccessToken");
-    this.oldCookie.clientGroupCode = this.$cookies.get("clientGroupCode");
     this.subjectId = this.$nuxt.$route.params.subjectId;
     if (this.$nuxt.$route.query.p) {
       this.hasPasswordquery = true;
       this.form.password = this.$nuxt.$route.query.p;
     }
     if (
-      this.oldCookie.clientAccessToken &&
+      this.$cookies.get("clientAccessToken") &&
       this.subjectId ==
-        this.getTokenPayload(this.oldCookie.clientAccessToken).subjectCode
+        this.getTokenPayload(this.$cookies.get("clientAccessToken")).subjectCode
     ) {
       this.$confirm({
         title: "すでに参加しているサブジェクトです。",
@@ -120,8 +149,12 @@ export default {
   beforeDestroy() {
     clearInterval(this.waittingInterval);
   },
-  async asyncData({ params, $axios }) {
-    const { data } = await $axios.get(`/client/subject/${params.subjectId}`);
+  async asyncData({ params, $axios, redirect }) {
+    const { data } = await $axios
+      .get(`/client/subject/${params.subjectId}`)
+      .catch(() => {
+        return redirect("/404");
+      });
     return { subjectData: data };
   },
   methods: {
@@ -137,29 +170,36 @@ export default {
           this.$cookies.set("clientAccessToken", result.data.access_token);
           this.$cookies.set("groupId", null);
           this.startWaitJionGroup();
-        })
-        .catch((error) => {
-          this.password = "";
         });
     },
     startWaitJionGroup() {
       this.step = 1;
       this.waitting = true;
       this.form.name = this.getTokenPayload(
-        this.oldCookie.clientAccessToken
+        this.$cookies.get("clientAccessToken")
       ).name;
       this.waittingInterval = setInterval(async () => {
-        await this.refreshWaittingMember();
-      }, 5000);
+        this.percent >= 100
+          ? await this.refreshWaittingMember()
+          : (this.percent += 20);
+      }, 1000);
     },
     async refreshWaittingMember() {
+      this.percent = 0;
       const members = await this.$nuxt.$axios
         .get("/client/subject/waitting")
         .then(async (result) => {
+          this.memberSelf = result.data.self;
           this.waittingMember = result.data.members.filter(
-            (member) => member.memberCode != result.data.self.memberCode
+            (member) => member.memberCode != this.memberSelf.memberCode
           );
-          if (result.data.self.group) {
+          if (this.memberSelf.prepGroupMember) {
+            this.waittingMember = this.waittingMember.filter(
+              (member) =>
+                member.memberCode != this.memberSelf.prepGroupMember.memberCode
+            );
+          }
+          if (this.memberSelf.group) {
             clearInterval(this.waittingInterval);
             await this.fetchNewGroupToken();
           }
@@ -173,6 +213,18 @@ export default {
         this.$cookies.set("clientGroupCode", result.data.groupCode);
         this.$nuxt.$router.push("/group");
       });
+    },
+    async invitationMember(memberCode) {
+      await this.$nuxt.$axios
+        .post(`/client/member/prep/${memberCode}`)
+        .then((result) => {
+          this.memberSelf["prepGroupMember"] = this.waittingMember.find(
+            (member) => member.memberCode == memberCode
+          );
+          this.waittingMember = this.waittingMember.filter(
+            (member) => member.memberCode != memberCode
+          );
+        });
     },
     getTokenPayload(token) {
       const base64Url = token.split(".")[1];

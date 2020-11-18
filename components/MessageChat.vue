@@ -7,6 +7,7 @@
         :data-source="comments"
         :header="`${comments.length} メッセージ`"
         item-layout="horizontal"
+        :locale="locale"
       >
         <template v-slot:renderItem="item">
           <a-list-item>
@@ -64,6 +65,9 @@ export default {
       connecting: true,
       value: "",
       moment,
+      locale: {
+        emptyText: "メッセージがありません",
+      },
     };
   },
   mounted() {
