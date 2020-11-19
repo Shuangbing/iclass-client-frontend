@@ -15,13 +15,8 @@
               :author="item.author"
               :content="item.content"
               :datetime="moment(item.datetime).fromNow()"
-              ><a-avatar
-                slot="avatar"
-                :style="
-                  `backgroundColor:` + hashColorFromName(item.author || 'none')
-                "
-                icon="user"
-              />
+            >
+              <UserAvatar slot="avatar" :name="item.author" />
             </a-comment>
           </a-list-item>
         </template>
@@ -52,17 +47,21 @@
 
 <script>
 import moment from "moment";
+import UserAvatar from "@/components/UserAvatar.vue";
 
 export default {
   props: {
     socket: Object,
     groupId: String,
   },
+  components: {
+    UserAvatar,
+  },
   data() {
     return {
       comments: [],
       submitting: false,
-      connecting: true,
+      connecting: false,
       value: "",
       moment,
       locale: {
@@ -71,49 +70,14 @@ export default {
     };
   },
   mounted() {
-    this.socket.on("connect", () => {
-      if (this.groupId) {
-        this.socket.emit(
-          "jion",
-          { groupId: this.$nuxt.$route.params.groupId },
-          (data) => {
-            const { status, message, groupData } = data;
-            if (status) {
-              this.$message.success(
-                `${groupData.subject.title}[${groupData.title}]に参加しました`
-              );
-              this.connecting = false;
-            } else {
-              this.$message.error(message);
-            }
-          }
-        );
-      }
-    });
-
     this.socket.on("recive:message", (data) => {
       this.comments = [data, ...this.comments];
       sessionStorage.chatHistory = JSON.stringify(this.comments);
     });
-
     moment.locale("ja");
     this.comments = JSON.parse(sessionStorage.chatHistory ?? "[]");
   },
   methods: {
-    hashColorFromName(name) {
-      var hash = 0;
-      if (name.length === 0) return hash;
-      for (var i = 0; i < name.length; i++) {
-        hash = name.charCodeAt(i) + ((hash << 5) - hash);
-        hash = hash & hash;
-      }
-      var color = "#";
-      for (var i = 0; i < 3; i++) {
-        var value = (hash >> (i * 8)) & 255;
-        color += ("00" + value.toString(16)).substr(-2);
-      }
-      return color;
-    },
     handleSubmit() {
       if (!this.value || !this.value.match(/\S/g)) {
         return;
@@ -140,4 +104,18 @@ export default {
 </script>
 
 <style>
+#chat {
+  min-width: 250px;
+  max-width: 500px;
+  margin: 2rem auto 0 1rem;
+}
+#chat .chat-history {
+  height: 600px;
+  overflow-y: scroll;
+  overflow-wrap: break-word;
+}
+#chat .chat-send {
+  height: 20%;
+  margin-top: 2rem;
+}
 </style>

@@ -7,6 +7,7 @@
             :title="groupData.group.subject.title"
             :sub-title="groupData.group.title"
           />
+
           <a-tabs default-active-key="1">
             <a-tab-pane key="1" tab="ビデオ通話">
               <VideoChat :groupData="groupData" />
@@ -18,12 +19,25 @@
               <DrawPaint />
             </a-tab-pane>
             <a-tab-pane key="4" tab="ファイル共有">
-              <UploadFile :groupId="groupId" :groupData="groupData" />
+              <UploadFile
+                :groupId="groupId"
+                :groupData="groupData"
+                :socket="socket"
+              />
             </a-tab-pane>
           </a-tabs>
         </div>
       </a-col>
       <a-col :span="8">
+        <a-row id="header-avatar">
+          <a-col :span="18">
+            <UserAvatar :name="groupData.user.name" />
+            {{ groupData.user.name }}</a-col
+          >
+          <a-col :span="6">
+            <a-button @click="logoutLogic">ログアウト</a-button>
+          </a-col>
+        </a-row>
         <MessageChat :groupId="groupId" :socket="socket" />
       </a-col>
     </a-row>
@@ -36,6 +50,7 @@ import ScreenShare from "@/components/ScreenShare";
 import UploadFile from "@/components/UploadFile";
 import MessageChat from "@/components/MessageChat";
 import DrawPaint from "@/components/DrawPaint";
+import UserAvatar from "@/components/UserAvatar.vue";
 
 export default {
   layout: "GroupView",
@@ -45,6 +60,37 @@ export default {
     UploadFile,
     MessageChat,
     DrawPaint,
+    UserAvatar,
+  },
+  mounted() {
+    this.socket.on("connect", () => {
+      if (this.groupData.group.groupCode) {
+        this.socket.emit(
+          "jion",
+          { groupId: this.groupData.group.groupCode },
+          (data) => {
+            const { status, message, groupData } = data;
+            if (status) {
+              this.$message.success(
+                `${this.groupData.group.subject.title}[${this.groupData.group.title}]に参加しました`
+              );
+            } else {
+              this.$message.error(message);
+            }
+          }
+        );
+      }
+    });
+
+    this.socket.on("recive:uploadNotification", async (data) => {
+      const { message } = data;
+      await this.refreshGroupData();
+      this.$notification.open({
+        message: "通知",
+        description: message,
+        placement: "topRight",
+      });
+    });
   },
   data() {
     return {
@@ -53,6 +99,29 @@ export default {
       }),
       groupId: this.$cookies.get("clientGroupCode"),
     };
+  },
+  methods: {
+    async refreshGroupData() {
+      const { data } = await this.$nuxt.$axios
+        .get(`/client/group`)
+        .catch(() => {
+          return redirect("/404");
+        });
+      this.groupData = data;
+    },
+    logoutLogic() {
+      this.$confirm({
+        title: "ログアウトしてよろしいでしょうか?",
+        content: "このグループに再度アクセスができなくなります。",
+        okText: "はい",
+        cancelText: "いいえ",
+        onOk: () => {
+          this.$cookies.set("clientAccessToken", null);
+          this.$cookies.set("groupId", null);
+          this.$router.push("/thanks");
+        },
+      });
+    },
   },
   async asyncData({ $axios, redirect }) {
     const { data } = await $axios.get(`/client/group`).catch(() => {
@@ -64,21 +133,7 @@ export default {
 </script>
 
 <style>
-#chat {
-  margin-left: 1rem;
-  height: 100%;
-  overflow-x: hidden;
-  overflow-y: hidden;
-}
-#chat .chat-history {
-  height: 80%;
-  min-height: 50vh;
-  max-height: 60vh;
-  overflow-y: scroll;
-  overflow-wrap: break-word;
-}
-#chat .chat-send {
-  height: 20%;
-  margin-top: 2rem;
+#header-avatar {
+  margin: 0 4px 0 16px;
 }
 </style>

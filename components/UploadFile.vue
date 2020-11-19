@@ -1,6 +1,16 @@
 <template>
   <div>
-    <a-table :columns="columns" :data-source="data" rowKey="id">
+    <a-alert
+      message="サポートしているファイルのフォーマット10MB以内の[*.pdf, *.jpg, *.gif, *.png]"
+      type="info"
+      style="margin-bottom: 1rem"
+      show-icon
+    />
+    <a-table
+      :columns="columns"
+      :data-source="groupData.group.files"
+      rowKey="id"
+    >
       <a target="_blank" slot="filename" slot-scope="file" :href="file.location"
         >{{ file.filename }}
       </a>
@@ -18,7 +28,7 @@
       :action="`${$axios.defaults.baseURL}/client/group/${groupId}/upload`"
       @change="uploadFile"
     >
-      <a-button>
+      <a-button style="margin-top: 1rem">
         <a-icon type="upload" /> ファイルを選択してアップロード
       </a-button>
     </a-upload>
@@ -57,18 +67,15 @@ const columns = [
 
 export default {
   props: {
+    socket: Object,
     groupId: String,
     groupData: Object,
   },
   data() {
     return {
-      data: [],
       columns,
       moment,
     };
-  },
-  mounted() {
-    this.data = this.groupData.group.files;
   },
   methods: {
     bytesToSize(bytes) {
@@ -80,10 +87,14 @@ export default {
     uploadFile(info) {
       if (info.file.status === "done") {
         this.$message.success(`${info.file.name} アップロードしました`);
-        this.data.push(info.file.response);
+        this.groupData.group.files.push(info.file.response);
+        this.uploadSuccess(info);
       } else if (info.file.status === "error") {
         this.$message.error(`${info.file.name} できませんでした`);
       }
+    },
+    uploadSuccess(info) {
+      this.socket.emit("send:uploaded", { fileInfo: info.file });
     },
   },
 };

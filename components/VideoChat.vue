@@ -1,6 +1,6 @@
 <template>
   <div>
-    <a-row :gutter="[16, 8]" style="min-width: 800px">
+    <a-row :gutter="[16, 8]" style="max-width: 800px">
       <a-col :span="8">
         <div class="video-chat-view">
           <a-card hoverable>
@@ -10,7 +10,7 @@
               ref="video"
               id="video"
               width="100%"
-              height="200px"
+              height="auto"
               autoplay
               muted
               object-fit="contain"
@@ -57,15 +57,19 @@
           <a-card hoverable>
             <video
               v-if="remoteStreams[member.memberCode]"
+              :class="[
+                remoteStreamsLoading[member.memberCode] ? 'loading' : '',
+              ]"
               slot="cover"
               :ref="`video-remote-${member.memberCode}`"
               width="100%"
-              height="200px"
+              height="auto"
               autoplay
               object-fit="contain"
               :srcObject.prop="remoteStreams[member.memberCode]"
               poster="data:image/gif,AAAA"
               :muted="remoteStreamsMute[member.memberCode]"
+              @loadstart="onLoading(member.memberCode)"
             ></video>
             <img
               v-if="!remoteStreams[member.memberCode]"
@@ -119,6 +123,7 @@ export default {
       room: null,
       remoteStreams: {},
       remoteStreamsMute: {},
+      remoteStreamsLoading: {},
       members: {},
     };
   },
@@ -225,14 +230,19 @@ export default {
         placement: "topRight",
       });
     },
+    onLoading(memberCode) {
+      this.$set(this.remoteStreamsLoading, memberCode, true);
+    },
   },
 };
 </script>
 
 <style>
 .video-chat-view .ant-card {
-  height: 300px;
-  width: 250px;
+  max-height: 300px;
+  max-width: 250px;
+  min-height: 150px;
+  min-width: 125px;
 }
 .video-chat-view {
   min-height: 20vh;
@@ -246,10 +256,12 @@ export default {
 .video-chat-view img {
   object-fit: contain;
   width: 100%;
-  height: 200px;
+  height: auto;
 }
 .video-chat-view video.loading {
-  background: black url(~assets/video-loading.gif) center center no-repeat;
+  width: 100%;
+  height: 200px;
+  background: #fff url(~assets/video-loading.gif) center center no-repeat;
 }
 .video-chat-view .user-icon {
   font-size: 7rem;

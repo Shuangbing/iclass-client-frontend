@@ -1,5 +1,7 @@
 <template>
-  <a-layout-header :style="{ position: 'fixed', zIndex: 1, width: '100%' }">
+  <a-layout-header
+    :style="{ position: 'fixed', zIndex: 1, width: '100%', zIndex: 100 }"
+  >
     <img src="@/assets/logo.png" class="header-logo" alt="logo" />
   </a-layout-header>
 </template>
