@@ -178,12 +178,31 @@ export default {
           this.$set(this.remoteStreams, stream.peerId, stream);
           this.$set(this.remoteStreamsMute, stream.peerId, false);
           this.jionedVideoChatNotify(stream.peerId);
+          this.reSortMembers();
         });
 
         this.room.on("peerLeave", (peerId) => {
           this.$delete(this.remoteStreams, peerId);
+          this.reSortMembers();
         });
       }
+    },
+    async reSortMembers() {
+      this.members.sort((memberA, memberB) => {
+        if (
+          this.remoteStreams[memberA.memberCode] &&
+          !this.remoteStreams[memberB.memberCode]
+        ) {
+          return -1;
+        } else if (
+          !this.remoteStreams[memberA.memberCode] &&
+          this.remoteStreams[memberB.memberCode]
+        ) {
+          return 1;
+        } else {
+          return 0;
+        }
+      });
     },
     async cameraOnOrOff() {
       if (this.cameraOn) {
