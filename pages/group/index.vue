@@ -9,7 +9,11 @@
           />
 
           <a-tabs default-active-key="video" v-model="tabKey">
-            <a-tab-pane key="video" tab="ビデオ通話">
+            <a-tab-pane key="video">
+              <span slot="tab">
+                <a-icon type="video-camera" />
+                ビデオ通話
+              </span>
               <VideoChat
                 :groupData="groupData"
                 :videoRoom.sync="videoRoom"
@@ -30,7 +34,11 @@
                 "
               />
             </a-tab-pane>
-            <a-tab-pane key="screen" tab="画面共有">
+            <a-tab-pane key="screen">
+              <span slot="tab">
+                <a-icon type="desktop" />
+                画面共有
+              </span>
               <ScreenShare
                 :videoRoom.sync="videoRoom"
                 :socket="socket"
@@ -38,7 +46,11 @@
                 :remoteScreenStream.sync="remoteScreenStream"
               />
             </a-tab-pane>
-            <a-tab-pane key="file" tab="ファイル共有">
+            <a-tab-pane key="file">
+              <span slot="tab">
+                <a-icon type="folder-open" />
+                ファイル共有
+              </span>
               <UploadFile
                 :groupId="groupId"
                 :groupData="groupData"
