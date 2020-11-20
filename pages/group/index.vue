@@ -8,17 +8,37 @@
             :sub-title="groupData.group.title"
           />
 
-          <a-tabs default-active-key="1">
-            <a-tab-pane key="1" tab="ビデオ通話">
-              <VideoChat :groupData="groupData" />
+          <a-tabs default-active-key="video" v-model="tabKey">
+            <a-tab-pane key="video" tab="ビデオ通話">
+              <VideoChat
+                :groupData="groupData"
+                :videoRoom.sync="videoRoom"
+                :socket="socket"
+                @update:videoRoom="(val) => (videoRoom = val)"
+                @update:tab="(val) => (tabKey = val)"
+                @update:screenStream="
+                  (val) => {
+                    remoteScreenStream = val;
+                    recivingRemoteShare = true;
+                  }
+                "
+                @update:stopScreenStream="
+                  (val) => {
+                    remoteScreenStream = null;
+                    recivingRemoteShare = false;
+                  }
+                "
+              />
             </a-tab-pane>
-            <a-tab-pane key="2" tab="画面共有" force-render>
-              <ScreenShare />
+            <a-tab-pane key="screen" tab="画面共有">
+              <ScreenShare
+                :videoRoom.sync="videoRoom"
+                :socket="socket"
+                :recivingRemoteShare.sync="recivingRemoteShare"
+                :remoteScreenStream.sync="remoteScreenStream"
+              />
             </a-tab-pane>
-            <a-tab-pane key="3" tab="お絵かきボード">
-              <DrawPaint />
-            </a-tab-pane>
-            <a-tab-pane key="4" tab="ファイル共有">
+            <a-tab-pane key="file" tab="ファイル共有">
               <UploadFile
                 :groupId="groupId"
                 :groupData="groupData"
@@ -62,6 +82,9 @@ export default {
     DrawPaint,
     UserAvatar,
   },
+  async beforeDestroy() {
+    await this.videoRoom.close();
+  },
   mounted() {
     this.socket.on("connect", () => {
       if (this.groupData.group.groupCode) {
@@ -98,6 +121,10 @@ export default {
         query: { token: this.$cookies.get("clientAccessToken") },
       }),
       groupId: this.$cookies.get("clientGroupCode"),
+      videoRoom: {},
+      remoteScreenStream: null,
+      tabKey: "video",
+      recivingRemoteShare: false,
     };
   },
   methods: {

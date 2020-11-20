@@ -56,7 +56,10 @@
         <div class="video-chat-view">
           <a-card hoverable>
             <video
-              v-if="remoteStreams[member.memberCode]"
+              v-if="
+                remoteStreams[member.memberCode] &&
+                !screenShareing[member.memberCode]
+              "
               :class="[
                 remoteStreamsLoading[member.memberCode] ? 'loading' : '',
               ]"
@@ -72,15 +75,27 @@
               @loadstart="onLoading(member.memberCode)"
             ></video>
             <img
-              v-if="!remoteStreams[member.memberCode]"
+              v-if="
+                !remoteStreams[member.memberCode] &&
+                !screenShareing[member.memberCode]
+              "
               slot="cover"
               src="@/assets/video-view-user.png"
+              :alt="member.memberCode"
+            />
+            <img
+              v-if="screenShareing[member.memberCode]"
+              slot="cover"
+              src="@/assets/video-screen-share.png"
               :alt="member.memberCode"
             />
             <a-card-meta>
               <div slot="title">
                 <a-icon type="team" />
                 {{ member.name }}
+                <a-tag v-if="screenShareing[member.memberCode]" color="green">
+                  画面共有中
+                </a-tag>
                 <a-icon
                   v-show="!remoteStreams[member.memberCode]"
                   type="disconnect"
@@ -111,6 +126,8 @@ import Peer, { SfuRoom } from "skyway-js";
 export default {
   props: {
     groupData: Object,
+    videoRoom: Object,
+    socket: Object,
   },
   data() {
     return {
@@ -120,10 +137,10 @@ export default {
       micphoneMute: true,
       video: {},
       videoStream: {},
-      room: null,
       remoteStreams: {},
       remoteStreamsMute: {},
       remoteStreamsLoading: {},
+      screenShareing: {},
       members: {},
     };
   },
@@ -135,9 +152,31 @@ export default {
       this.$set(this.remoteStreamsMute, member.memberCode, true)
     );
     this.startSelfVideoChat();
-  },
-  async beforeDestroy() {
-    this.room.close();
+
+    this.socket.on("recive:startScreenShare", async (data) => {
+      const { message, memberCode } = data;
+      this.$emit("update:tab", "screen");
+      this.$emit("update:screenStream", this.remoteStreams[memberCode]);
+      this.$set(this.screenShareing, memberCode, true);
+      this.$notification.open({
+        message: "通知",
+        description: message,
+        placement: "topRight",
+      });
+    });
+
+    this.socket.on("recive:stopScreenShare", async (data) => {
+      const { message, memberCode } = data;
+      this.$emit("update:tab", "video");
+      this.$emit("update:stopScreenStream");
+      this.videoRoom.replaceStream(this.videoStream);
+      this.$set(this.screenShareing, memberCode, false);
+      this.$notification.open({
+        message: "通知",
+        description: message,
+        placement: "topRight",
+      });
+    });
   },
   methods: {
     async startSelfVideoChat() {
@@ -163,25 +202,27 @@ export default {
       });
       this.peer.on("open", this.connect);
     },
-    connect() {
+    async connect() {
       if (!this.peer || !this.peer.open) {
         return;
       }
 
-      this.room = this.peer.joinRoom(this.groupData.group.groupCode, {
+      const newRoom = await this.peer.joinRoom(this.groupData.group.groupCode, {
         mode: "sfu",
         stream: this.videoStream,
       });
 
-      if (this.room) {
-        this.room.on("stream", (stream) => {
+      this.$emit("update:videoRoom", newRoom);
+
+      if (newRoom.on) {
+        newRoom.on("stream", (stream) => {
           this.$set(this.remoteStreams, stream.peerId, stream);
           this.$set(this.remoteStreamsMute, stream.peerId, false);
           this.jionedVideoChatNotify(stream.peerId);
           this.reSortMembers();
         });
 
-        this.room.on("peerLeave", (peerId) => {
+        newRoom.on("peerLeave", (peerId) => {
           this.$delete(this.remoteStreams, peerId);
           this.reSortMembers();
         });

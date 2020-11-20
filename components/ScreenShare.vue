@@ -1,6 +1,18 @@
 <template>
   <div>
-    <div v-show="isShareing">
+    <div v-show="recivingRemoteShare && isShareing == false">
+      <video
+        ref="remove_screenshare"
+        id="remove_screenshare"
+        width="100%"
+        height="100%"
+        autoplay
+        object-fit="contain"
+        :srcObject.prop="remoteScreenStream"
+      ></video>
+    </div>
+
+    <div v-show="recivingRemoteShare && isShareing == true">
       <video
         ref="screenshare"
         id="screenshare"
@@ -13,8 +25,12 @@
         画面共有停止
       </a-button>
     </div>
-    <div v-show="!isShareing">
-      <a-button type="primary" @click="startShare" icon="desktop">
+
+    <div
+      v-show="!recivingRemoteShare && isShareing == false"
+      id="screen-share-start"
+    >
+      <a-button size="large" type="primary" @click="startShare" icon="desktop">
         画面共有開始
       </a-button>
     </div>
@@ -23,6 +39,12 @@
 
 <script>
 export default {
+  props: {
+    videoRoom: Object,
+    socket: Object,
+    remoteScreenStream: MediaStream,
+    recivingRemoteShare: Boolean,
+  },
   data() {
     return {
       isShareing: false,
@@ -39,6 +61,8 @@ export default {
         navigator.mediaDevices
           .getDisplayMedia({ video: true })
           .then((stream) => {
+            this.socket.emit("send:startScreenShare");
+            this.videoRoom.replaceStream(stream);
             this.screenStream = stream;
             this.screenShare.srcObject = this.screenStream;
             this.screenShare.play();
@@ -52,6 +76,7 @@ export default {
         this.screenShare.pause();
         this.screenShare.srcObject = null;
         this.isShareing = false;
+        this.socket.emit("send:stopScreenShare");
       });
     },
   },
@@ -59,4 +84,8 @@ export default {
 </script>
 
 <style>
+#screen-share-start {
+  width: 200px;
+  margin: 10rem auto;
+}
 </style>

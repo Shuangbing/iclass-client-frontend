@@ -15,7 +15,6 @@ export default {
   },
   methods: {
     userSelect() {
-      console.log(1);
     },
   },
 };

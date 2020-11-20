@@ -10,6 +10,7 @@
       :columns="columns"
       :data-source="groupData.group.files"
       rowKey="id"
+      :locale="locale"
     >
       <a target="_blank" slot="filename" slot-scope="file" :href="file.location"
         >{{ file.filename }}
@@ -75,6 +76,9 @@ export default {
     return {
       columns,
       moment,
+      locale: {
+        emptyText: "ファイルがありません",
+      },
     };
   },
   methods: {
