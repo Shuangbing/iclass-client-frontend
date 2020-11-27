@@ -6,8 +6,8 @@
     "dev": "nuxt --port 8010",
     "build": "nuxt build",
     "start": "nuxt start",
-    "deploy:dev": "API_URL=https://dev--api.iclass.buzz nuxt build && firebase deploy",
-    "deploy:prod": "API_URL=https://api.iclass.buzz nuxt build && firebase deploy --only hosting:iclass-prod-2fa8f",
+    "deploy:dev": "API_URL=https://dev--api.iclass.buzz nuxt build && firebase deploy --only hosting:develop",
+    "deploy:prod": "API_URL=https://api.iclass.buzz nuxt build && firebase deploy --only hosting:prod",
     "generate": "nuxt generate"
   },
   "dependencies": {

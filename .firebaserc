@@ -1,5 +1,17 @@
 {
   "projects": {
     "default": "iclass-firebase"
+  },
+  "targets": {
+    "iclass-firebase": {
+      "hosting": {
+        "prod": [
+          "iclass-prod-2fa8f"
+        ],
+        "develop": [
+          "iclass-firebase"
+        ]
+      }
+    }
   }
 }
