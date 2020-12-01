@@ -142,6 +142,7 @@ export default {
       remoteStreamsLoading: {},
       screenShareing: {},
       members: {},
+      receiveOnly: false,
     };
   },
   async mounted() {
@@ -193,6 +194,7 @@ export default {
           })
           .catch((error) => {
             this.$message.error("カメラ/マイクのアクセス権限がありません");
+            this.receiveOnly = true;
           });
       }
 
@@ -208,8 +210,9 @@ export default {
       }
 
       const newRoom = await this.peer.joinRoom(this.groupData.group.groupCode, {
-        mode: "sfu",
-        stream: this.videoStream,
+        mode: "mesh",
+        stream: this.receiveOnly ? null : this.videoStream,
+        videoReceiveEnabled: this.receiveOnly,
       });
 
       this.$emit("update:videoRoom", newRoom);

@@ -79,12 +79,14 @@ export default {
   },
   methods: {
     handleSubmit() {
-      if (!this.value || !this.value.match(/\S/g)) {
+      const messageText = this.value;
+      this.value = "";
+      if (!messageText || !messageText.match(/\S/g)) {
         return;
       }
       this.submitting = true;
       const sendMessage = {
-        content: this.value,
+        content: messageText,
         groupId: this.groupId,
       };
       setTimeout(() => {
@@ -92,7 +94,7 @@ export default {
         this.socket.emit("send:message", sendMessage, (data) => {
           const { status, message } = data;
           if (status) {
-            this.value = "";
+            messageText = "";
           } else {
             this.$message.info(message);
           }
